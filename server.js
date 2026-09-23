@@ -108,7 +108,7 @@ app.post('/api/generate', async (req, res) => {
             }
         };
 
-        const googleApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const googleApiUrl = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
 
         // 4. Server menghubungi Google (Bukan browser pengguna yang menghubungi)
         const response = await fetch(googleApiUrl, {
