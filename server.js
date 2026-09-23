@@ -142,3 +142,4 @@ app.post('/api/generate', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server Dapur AI berjalan aman di http://localhost:${PORT}`);
 });
+module.exports = app;
