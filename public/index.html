@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI UGC Food Video Prompt Studio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0, 1, 0, 1);
+        }
+        .accordion-content.expanded {
+            max-height: 8500px;
+            transition: max-height 0.45s ease-in-out;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #e11d48;
+            cursor: pointer;
+        }
+        textarea::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+		/* Styling Menu Lipat Injector */
+.prompt-accordion {
+  margin-top: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.accordion-trigger {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  background-color: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  list-style: none; /* Menghilangkan panah standar */
+}
+
+.accordion-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.accordion-trigger:hover {
+  background-color: #f1f5f9;
+}
+
+.accordion-body {
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background-color: #ffffff;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-inject {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-inject:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.btn-inject:active {
+  transform: scale(0.98);
+}
+    </style>
+
+    <script>
+        const INDOOR_ENVIRONMENTS = [
+    "Meja Kayu Pinus Cerah & Talenan Kayu Oak Muda (Serat Halus Bersih, Cahaya Jendela Pagi & Nuansa Terang)",
+    "Countertop Marmer Putih Polos & Talenan Kayu Sungkai (Higienis, Pantulan Cahaya Terang & Estetika Clean)",
+    "Meja Kayu Beechwood Cerah & Talenan Kayu Solid Natural (Warna Kuning Muda, Cahaya Terang Benderang & Rapi)",
+    "Meja Keramik Putih Bersih & Talenan Bambu Terang (Permukaan Matte, Sinar Jendela Samping & Suasana Segar)",
+    "Meja Jati Muda Finishing Natural & Talenan Kayu Maple (Warna Pucat Bersih, Cahaya Terang & Look Higienis)",
+    "Countertop Teraso Putih Halus & Talenan Kayu Jati Terang (Bintik Teraso Samar, Sinar Natural & Super Bersih)",
+    "Meja Kayu Karet (Rubberwood) Pucat & Talenan Kayu Polos (Estetika Japandi, Cahaya Jendela Terang & Clean Look)",
+    "Alas Kain Katun Putih Bersih di Atas Meja Cerah & Talenan Kayu Muda (Lembut, Terang Benderang & Estetik)",
+    "Meja Semen Putih Ekspos & Talenan Kayu Mahoni Muda (Tekstur Bersih, Cahaya Terang & Suasana Modern)",
+    "Meja Kayu Ash Wood Cerah & Talenan Kayu Solid Rapi (Serat Lurus Terang, Cahaya Pagi Maksimal & Bebas Kusam)"
+];
+
+        const OUTDOOR_ENVIRONMENTS = [
+    "Meja Batu Paras Putih & Talenan Kayu Ulin Terang (Tekstur Batu Bersih, Cahaya Matahari Terik & Segar)",
+    "Meja Kayu Trembesi Muda & Talenan Bambu Natural (Sinar Matahari Langsung, Bayangan Lembut & Terang Benderang)",
+    "Countertop Semen Abu Muda & Talenan Kayu Jati Pucat (Permukaan Halus Bersih, Cahaya Outdoor Terang & Rapi)",
+    "Meja Kayu White-Washed & Talenan Kayu Solid Cerah (Gaya Pesisir Terang, Sinar Matahari Penuh & Look Higienis)",
+    "Meja Granit Krem Muda & Talenan Kayu Mahoni Terang (Refleksi Cahaya Siang, Bersih Mengkilap & Segar)",
+    "Alas Daun Pisang Segar di Meja Putih & Talenan Kayu Muda (Kontras Hijau-Putih, Cahaya Terang & Nuansa Bersih)",
+    "Meja Kayu Jati Rustic Terang & Talenan Kayu Pinus (Guratan Jelas namun Bersih, Sinar Terik & Estetika Natural)",
+    "Meja Batu Alam Abu Pudar & Talenan Kayu Sungkai (Warna Netral Terang, Cahaya Matahari Luar Ruangan & Rapi)",
+    "Meja Kayu Dek (Decking) Cerah & Talenan Bambu Solid (Garis Kayu Rapi, Terang Benderang & Suasana Teras Bersih)",
+    "Meja Batu Candi Krem Terang & Talenan Kayu Oak (Pori Batu Halus Bersih, Cahaya Langsung & Estetika Cerah)"
+];
+
+        const FEMALE_VO_STYLES = [
+            "Santai Kasual Teman Nongkrong (Hangat, bersahabat, ritme santai)",
+            "Ceria Enerjik Bikin Semangat (Tempo cepat, antusias, nada riang)",
+            "Lembut Empatik Kakak Penyayang (Intonasi halus, menenangkan, artikulasi empuk)",
+            "Teteh Sunda Ceria & Ramah (Lembut, cengkok khas Parahyangan, ramah, welcoming)",
+            "Mbak Jawa Medok Sopan (Intonasi halus, aksen medok Jawa kental, keibuan, hangat)",
+            "English Fluent Global Vlog (Full Bahasa Inggris, artikulasi native, ceria internasional)",
+            "Gen Z Jaksel Bilingual (Campuran Indo-Inggris, santai, trendy, kekinian)",
+            "ASMR Whisperer Foodie (Berbisik pelan, breathy, dekat mic, menonjolkan suara detail)",
+            "Fast-Paced TikToker Hype (Bicara sangat cepat, antusiasme meledak-ledak, tanpa jeda)",
+            "Elegan & Premium Reviewer (Suara jernih, sophisticated, tempo teratur, premium)"
+        ];
+
+        const MALE_VO_STYLES = [
+            "Bariton Santai Teman Ngopi (Hangat, nada dada empuk, kasual)",
+            "Mas-Mas Dapur Jago Masak (Praktis, sigap, logis, bersahabat)",
+            "Abang Gaul Hype Kuliner (Antusias, bersemangat, gaya nongkrong)"
+        ];
+
+        const TALENT_HAND_PROFILES = [
+    { name: "Wanita Kuning Langsat Elegan" },
+    { name: "Wanita Putih Porselen (Korean Look)" },
+    { name: "Wanita Sawo Matang Eksotis (Glowing)" },
+    { name: "Wanita Estetik Minimalis (ASMR Friendly)" },
+    { name: "Wanita Anggun Tropis" },
+    { name: "Wanita Muda Lincah & Ceria" },
+    { name: "Wanita Keibuan Terawat (Mature & Warm)" },
+    { name: "Wanita Klasik Nusantara" },
+    { name: "Wanita Fair Nude (Clean Girl Aesthetic)" },
+    { name: "Wanita Detailer (Fokus Makro)" }
+];
+
+        const OVERLAY_STYLES = [
+    "Cute & Clean Doodle (Latar Brush Kuning/Putih, Tulisan Tangan Rapi, Ornamen Sparkle Cerah)", 
+    "Handwritten Annotation", 
+    "Minimal Marker", 
+    "Editorial Caption"
+];
+
+        const SPICE_TOOLS = [
+            "Pilihan Otomatis AI (Bebas)",
+            "Ulekan Tradisional (Cobek & Muntu Batu)",
+            "Blender / Food Chopper Modern",
+            "Cincang Manual (Pisau & Talenan)"
+        ];
+
+        let currentEnvMode = 'indoor';
+        let currentVoiceGender = 'female';
+        
+        let referenceImages = []; 
+        
+        let clusterChatHistories = {
+            global: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: []
+        };
+        let partTempImages = {}; 
+
+        window.onload = function() {
+            populateSelectors();
+            initEmptyState();
+            updateApiKeyBadge();
+            const triggerValSelect = document.getElementById('triggerValueSelect');
+            if (triggerValSelect) triggerValSelect.value = 'Rendah';
+        };
+
+        function updateApiKeyBadge() {
+            const key = getActiveApiKey();
+            const badge = document.getElementById('apiKeyStatusBadge');
+            const keyStatusText = document.getElementById('apiKeyStatusText');
+            if (badge && keyStatusText) {
+                if (key) {
+                    badge.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+                    keyStatusText.textContent = 'API Key Terhubung';
+                } else {
+                    badge.className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
+                    keyStatusText.textContent = 'API Key Belum Diisi';
+                }
+            }
+        }
+
+        function toggleGeminiKeyModal() {
+            const modal = document.getElementById('geminiKeyModal');
+            if (modal) modal.classList.toggle('hidden');
+            
+            // Mengambil ingatan lama dari komputer
+            const savedKey = localStorage.getItem('user_gemini_api_key') || '';
+            const savedModel = localStorage.getItem('user_gemini_model') || 'gemini-1.5-flash';
+            
+            const keyInput = document.getElementById('customApiKeyInput');
+            const modelSelect = document.getElementById('geminiModelSelect');
+            
+            // Menampilkan ingatan tersebut di layar
+            if (keyInput) keyInput.value = savedKey;
+            if (modelSelect) modelSelect.value = savedModel;
+        }
+        function saveGeminiApiKey() {
+            const keyInput = document.getElementById('customApiKeyInput');
+            const modelSelect = document.getElementById('geminiModelSelect');
+            
+            const key = keyInput ? keyInput.value.trim() : '';
+            const model = modelSelect ? modelSelect.value : 'gemini-1.5-flash';
+
+            if (key) {
+                // Simpan kunci DAN simpan pilihan mesin ke memori komputer
+                localStorage.setItem('user_gemini_api_key', key);
+                localStorage.setItem('user_gemini_model', model); 
+                
+                updateApiKeyBadge();
+                showToast("Gemini API Key & Pilihan Mesin berhasil tersimpan!");
+            } else {
+                localStorage.removeItem('user_gemini_api_key');
+                updateApiKeyBadge();
+                showToast("API Key dihapus.");
+            }
+            toggleGeminiKeyModal(); // Tutup laci setelah selesai
+        }
+
+        function removeGeminiApiKey() {
+            localStorage.removeItem('user_gemini_api_key');
+            updateApiKeyBadge();
+            showToast("API Key dihapus.");
+            toggleGeminiKeyModal();
+        }
+
+        function getActiveApiKey() {
+            return localStorage.getItem('user_gemini_api_key') || "";
+        }
+		
+		function getActiveModel() {
+            // Ini otak baru untuk mengingat pilihan mesin Anda
+            return localStorage.getItem('user_gemini_model') || "gemini-1.5-flash";
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); e.stopPropagation();
+            const el = document.getElementById('dropzoneEmpty');
+            if (el) el.classList.add('border-rose-500', 'bg-rose-50/60');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault(); e.stopPropagation();
+            const el = document.getElementById('dropzoneEmpty');
+            if (el) el.classList.remove('border-rose-500', 'bg-rose-50/60');
+        }
+
+        function handleImageDrop(e) {
+            e.preventDefault(); e.stopPropagation();
+            const el = document.getElementById('dropzoneEmpty');
+            if (el) el.classList.remove('border-rose-500', 'bg-rose-50/60');
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                processImageFiles(e.dataTransfer.files);
+            }
+        }
+
+        function handleImageUpload(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                processImageFiles(e.target.files);
+            }
+        }
+
+        function processImageFiles(files) {
+            const loadingIndicator = document.getElementById('dropzoneLoadingIndicator');
+            if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+
+            let processedCount = 0;
+            const totalFiles = files.length;
+
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) {
+                    processedCount++;
+                    if(processedCount === totalFiles && loadingIndicator) loadingIndicator.classList.add('hidden');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const MAX_DIMENSION = 1080;
+                        if (width > height && width > MAX_DIMENSION) {
+                            height = Math.round((height * MAX_DIMENSION) / width);
+                            width = MAX_DIMENSION;
+                        } else if (height > MAX_DIMENSION) {
+                            width = Math.round((width * MAX_DIMENSION) / height);
+                            height = MAX_DIMENSION;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85); 
+                        referenceImages.push({
+                            base64: compressedDataUrl.split(',')[1],
+                            mimeType: 'image/jpeg',
+                            name: file.name,
+                            src: compressedDataUrl,
+                            instruction: ''
+                        });
+
+                        processedCount++;
+                        if (processedCount === totalFiles) {
+                            renderReferenceImages();
+                            if (loadingIndicator) loadingIndicator.classList.add('hidden');
+                            showToast(`${totalFiles} Foto referensi dimuat!`);
+                        }
+                    };
+                    img.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderReferenceImages() {
+            const previewContainer = document.getElementById('dropzonePreview');
+            const dropzoneEmpty = document.getElementById('dropzoneEmpty');
+
+            if (referenceImages.length > 0) {
+                dropzoneEmpty.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+                
+                let html = `<div class="flex flex-col gap-3 w-full">`;
+                referenceImages.forEach((img, idx) => {
+                    const escapedInstruction = img.instruction ? img.instruction.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
+                    html += `
+                        <div class="relative flex flex-row gap-3 w-full bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm group items-start transition-all hover:border-rose-300">
+                            <div class="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
+                                <img src="${img.src}" class="w-full h-full object-cover rounded-lg border border-slate-200">
+                                <button type="button" onclick="removeReferenceImage(${idx})" class="absolute -top-2 -right-2 bg-rose-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-sm hover:bg-rose-600 opacity-0 group-hover:opacity-100 transition-opacity z-10" title="Hapus Gambar"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div class="flex-1 w-full h-20 sm:h-24">
+                                <textarea placeholder="Instruksi spesifik untuk gambar ini (opsional)..." oninput="updateImageInstruction(${idx}, this.value)" class="w-full h-full px-3 py-2 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg focus:border-rose-500 focus:bg-white focus:ring-1 focus:ring-rose-200 outline-none resize-none custom-scrollbar">${escapedInstruction}</textarea>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                    <button type="button" onclick="document.getElementById('inputRefImage').click()" class="w-full py-3 rounded-xl border-2 border-dashed border-slate-300 hover:border-rose-400 hover:bg-rose-50 bg-white flex items-center justify-center gap-2 text-slate-500 hover:text-rose-600 transition-all text-xs font-bold" title="Tambah Gambar Lainnya">
+                        <i class="fa-solid fa-plus text-base"></i> Tambah Gambar Lainnya
+                    </button>
+                </div>
+                <div class="w-full mt-1 flex justify-between items-center text-[10px] text-slate-500 font-medium">
+                    <span class="inline-flex items-center gap-1"><i class="fa-solid fa-check text-emerald-500"></i> ${referenceImages.length} gambar termuat. Parameter siap dianalisis.</span>
+                    <button type="button" onclick="removeAllReferenceImages()" class="text-rose-500 hover:underline">Hapus Semua</button>
+                </div>`;
+                
+                previewContainer.innerHTML = html;
+            } else {
+                dropzoneEmpty.classList.remove('hidden');
+                previewContainer.classList.add('hidden');
+            }
+        }
+
+        function removeReferenceImage(index) {
+            referenceImages.splice(index, 1);
+            renderReferenceImages();
+        }
+
+        function updateImageInstruction(index, value) {
+            if (referenceImages[index]) {
+                referenceImages[index].instruction = value;
+            }
+        }
+
+        function removeAllReferenceImages() {
+            referenceImages = [];
+            const fileInput = document.getElementById('inputRefImage');
+            if (fileInput) fileInput.value = '';
+            renderReferenceImages();
+            showToast("Semua gambar referensi dihapus.");
+        }
+
+        function initEmptyState() {
+            const partsContainer = document.getElementById('partsContainer');
+            if (partsContainer) {
+                partsContainer.innerHTML = `
+                    <div class="bg-white border-2 border-dashed border-rose-200 rounded-3xl p-8 sm:p-12 text-center shadow-sm">
+                        <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner border border-rose-100 mb-4">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <h4 class="text-base sm:text-lg font-bold text-slate-800">Studio Siap Meracik Prompt Pure UGC Raw Footage 8K</h4>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-2">Pastikan API Key terhubung. Masukkan Nama Masakan lalu klik Generate.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function populateSelectors() {
+            const envSelect = document.getElementById('environmentSelect');
+            if (envSelect) {
+                envSelect.innerHTML = '';
+                const envList = (currentEnvMode === 'indoor') ? INDOOR_ENVIRONMENTS : OUTDOOR_ENVIRONMENTS;
+                envList.forEach(env => envSelect.appendChild(new Option(env, env)));
+            }
+
+            const voSelect = document.getElementById('voiceStyleSelect');
+            if (voSelect) {
+                voSelect.innerHTML = '';
+                let voList = currentVoiceGender === 'male' ? MALE_VO_STYLES : FEMALE_VO_STYLES;
+                if (currentVoiceGender === 'auto') voList = ["Pilihan Otomatis AI"];
+                voList.forEach(vo => voSelect.appendChild(new Option(vo, vo)));
+            }
+
+            const handSelect = document.getElementById('talentHandSelect');
+            if (handSelect) {
+                handSelect.innerHTML = '';
+                TALENT_HAND_PROFILES.forEach((hand, idx) => handSelect.appendChild(new Option(hand.name, idx)));
+            }
+
+            const overlaySelect = document.getElementById('overlayStyleSelect');
+            if (overlaySelect) {
+                overlaySelect.innerHTML = '';
+                OVERLAY_STYLES.forEach(style => overlaySelect.appendChild(new Option(style, style)));
+            }
+
+            const spiceToolSelect = document.getElementById('spiceToolSelect');
+            if (spiceToolSelect) {
+                spiceToolSelect.innerHTML = '';
+                SPICE_TOOLS.forEach(tool => spiceToolSelect.appendChild(new Option(tool, tool)));
+            }
+        }
+
+        function switchEnvironmentMode(mode) {
+            currentEnvMode = mode;
+            const btnIn = document.getElementById('btnEnvIndoor');
+            const btnOut = document.getElementById('btnEnvOutdoor');
+            if (mode === 'indoor') {
+                if (btnIn) btnIn.className = 'px-2.5 py-1 rounded-md bg-white text-rose-700 font-bold shadow-xs';
+                if (btnOut) btnOut.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900';
+            } else {
+                if (btnOut) btnOut.className = 'px-2.5 py-1 rounded-md bg-white text-rose-700 font-bold shadow-xs';
+                if (btnIn) btnIn.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900';
+            }
+            populateSelectors();
+        }
+
+        function switchVoiceGender(gender) {
+            currentVoiceGender = gender;
+            const btnF = document.getElementById('btnVoFemale');
+            const btnM = document.getElementById('btnVoMale');
+            const btnA = document.getElementById('btnVoAuto');
+            [btnF, btnM, btnA].forEach(btn => { if(btn) btn.className = 'px-2 py-1 rounded-md text-slate-600 hover:text-slate-900'; });
+            if (gender === 'female' && btnF) btnF.className = 'px-2 py-1 rounded-md bg-white text-rose-700 font-bold shadow-xs';
+            else if (gender === 'male' && btnM) btnM.className = 'px-2 py-1 rounded-md bg-white text-rose-700 font-bold shadow-xs';
+            else if (gender === 'auto' && btnA) btnA.className = 'px-2 py-1 rounded-md bg-white text-rose-700 font-bold shadow-xs';
+            populateSelectors();
+        }
+
+        function handleTriggerModeChange() {
+            const modeEl = document.getElementById('triggerModeSelect');
+            const valSelect = document.getElementById('triggerValueSelect');
+            if (!modeEl || !valSelect) return;
+            const mode = modeEl.value;
+            valSelect.innerHTML = '';
+            if (mode === 'context') {
+                ["Rendah (Minimal)", "Sedang (Standar)", "Tinggi (Kaya Anotasi)"].forEach(o => valSelect.appendChild(new Option(o, o.split(' ')[0])));
+            } else {
+                ["25%", "50%", "75%", "100%"].forEach(o => valSelect.appendChild(new Option(o, o)));
+            }
+        }
+
+        // ==========================================
+        // FITUR BARU: INJEKSI START-FRAME MUTLAK
+        // ==========================================
+        function injectStartFrameMandate(partNum) {
+            const textarea = document.getElementById(`partTextarea${partNum}`);
+            if (!textarea) return;
+
+            const mandateText = `\n[MANDAT KLONING START-FRAME MUTLAK]: Gambar referensi yang dilampirkan BUKAN sekadar inspirasi, melainkan CETAK BIRU MUTLAK untuk frame pertama video. Anda WAJIB melakukan "Pixel-Perfect Match" pada detik 00:00.0. Kunci seluruh topologi spasial, skala objek, warna, komposisi letak perabot, dan sudut lensa (angle) agar 100% identik dengan foto referensi. ATURAN KINETIK AWAL: Tahan wujud visual ini secara statis (Absolute Freeze-Frame) selama 0.5 detik pertama. DILARANG KERAS ada pergerakan kamera, pergerakan partikel, atau kemunculan tangan talent sebelum detik 00:00.5. DILARANG KERAS menggeser letak benda, memutar sudut pandang, atau menghalusinasi objek yang tidak ada di foto asli pada frame pembuka ini.\n`;
+
+            if (textarea.value.includes('[MANDAT KLONING START-FRAME MUTLAK]')) {
+                showToast("Mandat Start-Frame sudah disuntikkan sebelumnya!", true);
+                return;
+            }
+
+            const marker = "SCENE PROMPT KESELURUHAN (MASTER SCENE):";
+            if (textarea.value.includes(marker)) {
+                textarea.value = textarea.value.replace(marker, marker + mandateText);
+                showToast(`Mandat Start-Frame berhasil disuntikkan ke Part ${partNum}!`);
+                
+                const btn = document.getElementById(`btnInjectMandate${partNum}`);
+                if (btn) {
+                    btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'text-white');
+                    btn.classList.add('bg-emerald-100', 'border', 'border-emerald-300', 'text-emerald-700', 'hover:bg-emerald-200');
+                    btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Mandat Disuntikkan';
+                }
+            } else {
+                showToast("Gagal menemukan titik injeksi pada teks.", true);
+            }
+        }
+
+        // ==========================================
+        // FITUR BARU: INJEKSI END-FRAME MUTLAK (GBR 2)
+        // ==========================================
+        function injectEndFrameMandate(partNum) {
+            const textarea = document.getElementById(`partTextarea${partNum}`);
+            if (!textarea) return;
+
+            const mandateText = `\n[MANDAT KLONING END-FRAME MUTLAK]: Gambar referensi nomor 2 yang dilampirkan adalah CETAK BIRU MUTLAK untuk wujud akhir frame ini. Anda WAJIB melakukan "Pixel-Perfect Match" wujud fisik makanan, komposisi akhir, letak, dan kematangan tepat pada detik ke-10.0 agar 100% identik dengan foto referensi kedua.\n`;
+
+            if (textarea.value.includes('[MANDAT KLONING END-FRAME MUTLAK]')) {
+                showToast("Mandat End-Frame sudah disuntikkan sebelumnya!", true);
+                return;
+            }
+
+            const marker = "SCENE PROMPT KESELURUHAN (MASTER SCENE):";
+            if (textarea.value.includes(marker)) {
+                textarea.value = textarea.value.replace(marker, marker + mandateText);
+                showToast(`Mandat End-Frame berhasil disuntikkan ke Part ${partNum}!`);
+                
+                const btn = document.getElementById(`btnInjectEndMandate${partNum}`);
+                if (btn) {
+                    btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'text-white');
+                    btn.classList.add('bg-emerald-100', 'border', 'border-emerald-300', 'text-emerald-700', 'hover:bg-emerald-200');
+                    btn.innerHTML = '<i class="fa-solid fa-check-double"></i> End-Frame Tersuntik';
+                }
+            } else {
+                showToast("Gagal menemukan titik injeksi pada teks.", true);
+            }
+        }
+		// ==========================================
+        // FITUR BARU: INJEKSI KESELARASAN HIDANGAN
+        // ==========================================
+        function injectDishConsistencyAnchor(partNum) {
+            const textarea = document.getElementById(`partTextarea${partNum}`);
+            if (!textarea) return;
+
+            const anchorText = `\n[MANDAT KESELARASAN HIDANGAN]: Wujud fisik, warna, ukuran porsi, susunan topping, garnish, dan tingkat kematangan hidangan pada adegan ini WAJIB disamakan secara mutlak agar 100% identik dengan tampilan masakan pada gambar referensi utama. DILARANG KERAS ada perubahan bentuk piring, perbedaan warna saus, atau hilangnya komponen garnish di tengah jalan.\n`;
+
+            if (textarea.value.includes('[MANDAT KESELARASAN HIDANGAN]')) {
+                showToast("Anchor Keselarasan Hidangan sudah disuntikkan sebelumnya!", true);
+                return;
+            }
+
+            const marker = "SCENE PROMPT KESELURUHAN (MASTER SCENE):";
+            if (textarea.value.includes(marker)) {
+                textarea.value = textarea.value.replace(marker, marker + anchorText);
+                showToast(`Anchor Keselarasan Hidangan berhasil disuntikkan ke Part ${partNum}!`);
+            } else {
+                textarea.value += anchorText;
+                showToast(`Anchor Keselarasan Hidangan ditambahkan ke akhir Part ${partNum}!`);
+            }
+        }
+        // ==========================================
+        // FITUR BARU: INJEKSI VISUAL ANCHOR (MENU LIPAT)
+        // ==========================================
+        function injectVisualAnchor(partNum) {
+            const textarea = document.getElementById(`partTextarea${partNum}`);
+            if (!textarea) return;
+
+            const anchorText = `\n[VISUAL ANCHOR MANDATE]: Jika adegan memproses/mengiris bahan utama (seperti daging) yang telah ditampilkan di scene sebelumnya, wujud fisik, pola serat (marbling), ketebalan, dan warna objek WAJIB dipertahankan 100% identik dengan gambar referensi. DILARANG KERAS mengubah tekstur bahan, dilarang merender daging menjadi bentuk bongkahan yang berbeda, dan pastikan pencahayaan pada permukaan objek konsisten dari detik awal hingga akhir pemotongan.\n`;
+
+            if (textarea.value.includes('[VISUAL ANCHOR MANDATE]')) {
+                showToast("Visual Anchor sudah disuntikkan sebelumnya!", true);
+                return;
+            }
+
+            const marker = "SCENE PROMPT KESELURUHAN (MASTER SCENE):";
+            if (textarea.value.includes(marker)) {
+                textarea.value = textarea.value.replace(marker, marker + anchorText);
+                showToast(`Visual Anchor berhasil disuntikkan ke Part ${partNum}!`);
+            } else {
+                textarea.value += anchorText;
+                showToast(`Visual Anchor ditambahkan ke akhir Part ${partNum}!`);
+            }
+        }
+        // ==========================================
+        // FITUR BARU: CO-PILOT BUMBU (API PREVIEW AI)
+        // ==========================================
+        async function generateSpicePreview() {
+            const apiKey = getActiveApiKey();
+            if (!apiKey) {
+                showToast("Gemini API Key belum diisi!", true);
+                toggleGeminiKeyModal();
+                return;
+            }
+
+            const dishName = document.getElementById('inputDishName')?.value.trim();
+            const chatInput = document.getElementById('inputSpiceChat')?.value.trim();
+            
+            if (!dishName && !chatInput) {
+                showToast("Isi Nama Masakan atau instruksi bumbu terlebih dahulu!", true);
+                return;
+            }
+
+            const btn = document.getElementById('btnPreviewSpice');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Meracik...';
+            btn.disabled = true;
+
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                
+                let promptText = `Buatkan daftar komposisi bumbu utuh dan bumbu halus yang paling autentik dan lengkap untuk masakan: ${dishName || 'tersebut'}. `;
+                if (chatInput) {
+                    promptText += `\nInstruksi tambahan mutlak dari Chef: "${chatInput}".`;
+                }
+                promptText += `\n\nATURAN MUTLAK:\n1. Jangan berikan cara memasaknya, HANYA daftar bumbu dan bahan utama.\n2. Pisahkan kategori dengan jelas (misal: Bumbu Halus, Bumbu Utuh/Aromatik, Bahan Utama).\n3. JANGAN gunakan bumbu generik, buat se-autentik mungkin.\n4. Langsung berikan daftarnya tanpa basa-basi pembuka atau penutup.`;
+
+                const payload = {
+                    contents: [{ role: 'user', parts: [{ text: promptText }] }],
+                    generationConfig: { temperature: 0.3 }
+                };
+
+                const response = await fetchWithRetry(apiUrl, payload, 2);
+                const data = await response.json();
+
+                if (!response.ok || data.error) throw new Error(data.error?.message || "Gagal menghubungi Gemini");
+
+                const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                
+                if (resultText) {
+                    document.getElementById('inputRecipeDetails').value = resultText.trim();
+                    showToast("Preview bumbu berhasil dimuat! Silakan edit jika perlu.");
+                }
+
+            } catch (err) {
+                showToast(`Gagal: ${err.message}`, true);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function clearSpicePreview() {
+            const recipeArea = document.getElementById('inputRecipeDetails');
+            const chatInput = document.getElementById('inputSpiceChat');
+            if (recipeArea) recipeArea.value = '';
+            if (chatInput) chatInput.value = '';
+            showToast("Area bumbu dibersihkan.");
+        }
+
+
+        async function handleGenerateClick() {
+            // 1. MENGAMBIL KETIKAN PENGGUNA DI LAYAR
+            const inputEl = document.getElementById('inputDishName');
+            const targetDish = inputEl ? inputEl.value.trim() : "";
+            
+            if (!targetDish) {
+                showToast("Silakan masukkan Nama Masakan terlebih dahulu!", true);
+                return;
+            }
+
+            const btn = document.getElementById('btnGenerate');
+            const progressContainer = document.getElementById('generationProgressText');
+            const statusMsg = document.getElementById('generationStatusMsg');
+
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>Generating...</span>';
+                btn.disabled = true;
+            }
+            if (progressContainer) progressContainer.classList.remove('hidden');
+            if (statusMsg) statusMsg.textContent = `Mengirim pesanan ke dapur tertutup (Server)...`;
+
+            try {
+                // 2. MEMBUAT "KERTAS PESANAN" (Hanya berisi pilihan menu pengguna, TANPA resep rahasia)
+                const clientPayload = {
+                    dishName: targetDish,
+                    recipeDetails: document.getElementById('inputRecipeDetails')?.value.trim() || '',
+                    referenceImages: referenceImages, 
+                    envSelected: document.getElementById('environmentSelect')?.value,
+                    overlayStyle: document.getElementById('overlayStyleSelect')?.value,
+                    spiceTool: document.getElementById('spiceToolSelect')?.value,
+                    voiceStyle: document.getElementById('voiceStyleSelect')?.value,
+                    currentVoiceGender: currentVoiceGender,
+                    handProfileName: TALENT_HAND_PROFILES[parseInt(document.getElementById('talentHandSelect')?.value, 10) || 0]?.name,
+                    transitionStyle: document.getElementById('transitionStyleSelect')?.value,
+                    triggerVal: document.getElementById('triggerValueSelect')?.value,
+                    selectedModel: getActiveModel()
+                };
+
+                // 3. MENYERAHKAN PESANAN KE PELAYAN KITA SENDIRI (Jalur '/api/generate')
+                // Layar tidak lagi menghubungi Google secara langsung!
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(clientPayload)
+                });
+
+                // 4. MENERIMA MAKANAN JADI (Hasil naskah dari server)
+                const parsedData = await response.json();
+
+                if (!response.ok || parsedData.error) {
+                    throw new Error(parsedData.error || "Gagal menghasilkan blueprint.");
+                }
+
+                // 5. MENAMPILKAN HASILNYA KE LAYAR PENGGUNA
+                localStorage.setItem('ugc_last_result', JSON.stringify(parsedData));
+                renderPromptDataToUI(parsedData, targetDish, clientPayload.envSelected, clientPayload.overlayStyle, clientPayload.voiceStyle, { name: clientPayload.handProfileName });
+                showToast(`Berhasil meracik prompt untuk "${targetDish}"!`);
+                document.getElementById('outputSection')?.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (err) {
+                console.error("Generator Error:", err);
+                showToast(`Gagal: ${err.message}`, true);
+                if (statusMsg) statusMsg.textContent = "Gagal memproses.";
+            } finally {
+                // Mengembalikan tombol generate seperti semula
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles text-base"></i><span>GENERATE PROMPT</span>';
+                    btn.disabled = false;
+                }
+                if (progressContainer) progressContainer.classList.add('hidden');
+            }
+        }
+
+        async function fetchWithRetry(url, payload, maxRetries = 3) {
+            let delay = 1000;
+            const headers = { 'Content-Type': 'application/json' };
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const res = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(payload) });
+                    if (res.ok) return res;
+                    const clone = res.clone();
+                    const data = await clone.json().catch(()=>({}));
+                    const msg = data.error?.message || "";
+                    if (res.status === 429) {
+                        if(msg.toLowerCase().includes('quota')) return res;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    return res;
+                } catch (e) {
+                    if (i === maxRetries - 1) throw e;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+            return fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(payload) });
+        }
+
+        function formatTimecodeRange(partNum) {
+            const startSec = (partNum - 1) * 10;
+            const endSec = partNum * 10;
+            const p = n => (n < 10 ? '0' + n : n);
+            return `${p(Math.floor(startSec/60))}:${p(startSec%60)}.0 - ${p(Math.floor(endSec/60))}:${p(endSec%60)}.0`;
+        }
+
+        function renderPromptDataToUI(data, targetDish, envSelected, overlayStyle, voiceStyle, handProfile) {
+            const partsContainer = document.getElementById('partsContainer');
+            if (!partsContainer) return;
+            partsContainer.innerHTML = '';
+            
+            const genderTag = currentVoiceGender === 'male' ? 'PRIA (MALE)' : 'WANITA (FEMALE)';
+            const isDoodle = (overlayStyle || "").toLowerCase().includes('doodle');
+
+            const totalParts = data.parts.length;
+
+            data.parts.forEach((part) => {
+                const timeRange = formatTimecodeRange(part.partNum);
+                
+                const spiceComposition = data.culinaryBlueprint?.coreDecisions?.spiceCompositionDecided || data.culinaryBlueprint?.spiceCompositionDecided || "BUMBU UTAMA SESUAI RESEP";
+                const spiceConsistency = data.culinaryBlueprint?.coreDecisions?.spiceProcessingDecided || data.culinaryBlueprint?.spiceProcessingDecided || "SINKRONKAN WUJUD BUMBU DENGAN ADEGAN SEBELUMNYA";
+                const thermalDynamics = data.culinaryBlueprint?.thermoChemistry?.thermalDynamicsDecided || data.culinaryBlueprint?.thermalDynamicsDecided || "NATURAL STEAM / HEAT DYNAMICS";
+                const matterConservation = data.culinaryBlueprint?.physicsEngine?.matterConservationLaw || data.culinaryBlueprint?.matterConservationLaw || "1 irisan pisau membagi 1 benda menjadi tepat 2 potong. DILARANG ada objek yang muncul tiba-tiba dari ketiadaan (Zero Magic Duplication).";
+                const doodlePalette = data.culinaryBlueprint?.environmentalEsthetics?.doodleColorPaletteDecided || data.culinaryBlueprint?.doodleColorPaletteDecided || "Warna teks kontras natural menyesuaikan estetika hidangan.";
+                const colorGrading = data.culinaryBlueprint?.microOptics?.colorGradingProfile || "Natural, clean, no filter.";
+                const dominantColor = data.culinaryBlueprint?.environmentalEsthetics?.dominantColorPalette || "Warna natural dapur.";
+                const propMemory = data.culinaryBlueprint?.environmentalEsthetics?.propPermanenceMemory || "Benda di latar belakang bersifat permanen dan solid.";
+                const spatialScale = data.culinaryBlueprint?.microOptics?.spatialScaleReference || "Skala objek proporsional dengan ukuran asli makanan manusia.";
+                const wardrobeAnchor = "Lengan dan pergelangan tangan 100% kulit polos tanpa ada ujung lengan baju/kain yang masuk ke frame";
+                
+                let microCutsText = "";
+                if (part.microCuts && part.microCuts.length > 0) {
+                    microCutsText = "\n\n[RAPID MICRO-CUT SEQUENCE (ANTI-ANOMALI GENERATION)]\nGunakan pecahan sub-prompt di bawah ini untuk men-generate video secara terpisah (durasi presisi 2.0 detik per sub-shot), lalu gabungkan di aplikasi editor agar bebas glitch & morphing:\n";
+                    part.microCuts.forEach(cut => {
+                        microCutsText += `\n▶ CUT ${cut.cutNum} [${cut.durationRange}] | Lensa: ${cut.cameraAngle}\n🎬 PROMPT CUT: ${cut.cutPrompt} (KAMERA DILARANG ZOOM/PAN)\n`;
+                    });
+					
+                }
+                const dynamicDirectives = "";
+                let baseDynamic = "";
+
+                if (part.sceneCategory === 'PREPARATION') {
+                    baseDynamic = `- WADAH TUNGGAL MUTLAK (SINGLE BOWL POLICY): Seluruh bahan mentah/bumbu WAJIB sudah terkupas bersih (cabai tanpa tangkai, bawang tanpa kulit luar). Setiap jenis komposisi mutlak HANYA boleh diwadahi dalam TEPAT 1 MANGKUK SAJA (1 jenis = 1 mangkuk, dilarang dipecah/berserakan).`;
+                    
+                    if (part.isSpiceRelated) {
+                        baseDynamic += `\n- KOMPOSISI BUMBU UTAMA: ${spiceComposition.toUpperCase()}\n- KONSISTENSI BUMBU: ${spiceConsistency.toUpperCase()}`;
+                    }
+                } else if (part.sceneCategory === 'COOKING') {
+                    baseDynamic = `- KONSISTENSI WUJUD MASAK: Bahan/Bumbu yang masuk ke wajan WAJIB wujudnya sama persis dengan hasil eksekusi di adegan sebelumnya. DILARANG tiba-tiba utuh kembali (Anti-Amnesia Wujud).`;
+                } else if (part.sceneCategory === 'PLATING') {
+                    baseDynamic = `- ESTETIKA PENYAJIAN (PLATING): Wujud hidangan akhir/jadi. WAJIB ekspos serat mikro (micro-fibers) daging basah/juicy saat dibelah, atau tekstur crispy crust yang tajam.
+- KONTINUITAS FINAL: Wujud dan ukuran potongan bahan di atas piring WAJIB sama persis dengan adegan masak sebelumnya.`;
+                } else {
+                    baseDynamic = `- ESTETIKA & TEKSTUR: Pastikan kondisi visual bahan sesuai dengan realita dan tidak melanggar hukum gravitasi atau suhu.`;
+                }
+
+                let mechanicalDirectives = "";
+                if (part.hasCuttingAction) {
+                    mechanicalDirectives += `\n- DOKTRIN FISIKA POTONG: Pisau membelah benda dengan logis. SEBELUM dipotong, sebutkan jumlah presisi bahan utuh di atas talenan dengan kata 'tepat [angka]'. ${matterConservation.toUpperCase()}`;
+                }
+                if (part.hasGrindingAction) {
+                    mechanicalDirectives += `\n- DOKTRIN FISIKA PENGHALUSAN (ULEK/BLENDER): Gerakan mekanis logis. SEBELUM hancur, wujud awal bahan utuh di dalam cobek/blender WAJIB disebutkan jumlah presisinya menggunakan kata 'tepat [angka]' dan 'seluruh [angka]'. Benda hancur sesuai alat tanpa amnesia wujud.`;
+                }
+                if (part.hasFryingAction) {
+                    mechanicalDirectives += `\n- TERMODINAMIKA PANAS TINGGI: Minyak panas memunculkan micro-bubbles berdesis saat bersentuhan dengan bahan. Suhu tinggi aktif. ${thermalDynamics.toUpperCase()}`;
+                }
+                if (part.hasFluidPouring) {
+                    mechanicalDirectives += `\n- FISIKA FLUIDA (MENUANG): Cairan pekat/encer mengalir turun secara konstan mengikuti gravitasi (laminar flow) tanpa cipratan melayang.`;
+                }
+                if (part.sceneCategory === 'PLATING' || (!part.hasFryingAction && part.sceneCategory === 'COOKING')) {
+                    mechanicalDirectives += `\n- FISIKA PANAS MAKANAN MATANG: HANYA uap panas transparan mengepul tipis (wispy steam). DILARANG KERAS ada asap putih tebal berlebihan seperti kebakaran.`;
+                }
+
+                let finalDynamicDirectives = baseDynamic + mechanicalDirectives;
+
+                if (part.customContextualDirectives) {
+                    finalDynamicDirectives += `\n- ATURAN KUSTOM SPESIFIK SCENE (AI MANDATE): ${part.customContextualDirectives.toUpperCase()}`;
+                }
+
+                const baseDirectives = `[GLOBAL MASTER DIRECTIVES - 8K UGC STUDIO]
+- KAMERA & KINEMATIKA: POV Smartphone 9:16 Vertical, 60fps Native Raw. STRICTLY ZERO DIGITAL ZOOM & ZERO PAN. Lensa mengunci jarak ketat sesuai ketentuan adegan (CLOSE-UP khusus bumbu, EXTREME MACRO SHOT untuk masak/aksi). Kecepatan 1.0x (Anti-SlowMo), shutter 90-degree tajam.
+- KUALITAS OPTIK & FISIKA: 8K Ultra-HD, ketajaman tekstur mikroskopis tinggi, ZERO motion blur. ${colorGrading} Organic diffused highlights (Anti-plastik). ZERO-MESS Execution (tanpa ceceran). Proporsi skala spasial nyata (${spatialScale}). Object Permanence konsisten (${propMemory}).
+- MANDAT UHD (MAX FIDELITY & 8K UPSCALE): Kualitas visual WAJIB setara 8K Ultra-HD 12-bit RAW tanpa kompresi. Mesin dilarang keras merender efek buram, resolusi rendah, atau compression artifacts. Tekstur mikro (frekuensi tinggi) WAJIB tajam mikroskopis!
+- TALENT & TANGAN: ${wardrobeAnchor} (TANGAN POLOS 100%, ZERO cincin/jam). Anatomi genggaman ergonomis, jari anti-clipping ke objek.
+- INVISIBLE CREATOR: DILARANG KERAS merender wujud fisik kaki tripod atau alat kamera di frame!`;
+
+                const overlayDrt = `- Formula: ${isDoodle ? 'HANDWRITTEN TEXT + DOODLE LINE + DOODLE ICON.' : 'CLEAN TEXT OVERLAY.'}
+- Estetika Warna: ${doodlePalette}
+- Jenis penghias: ${part.overlayDecorator || 'Minimal'}
+- Karakter: ${part.overlayCharacter || 'Editorial'}
+- Font (Konsisten): ${part.fontTypographyDirective || 'Sans-serif'}
+- Aturan Waktu: Muncul pada detik ${part.overlayTimingStart || '00:01.0'}, hilang pada detik ${part.overlayTimingEnd || '00:06.0'}. Frame detik ke-10 WAJIB BERSIH.
+- Penempatan (Safe Zone): ${part.overlaySafePosition || 'Aman, tidak menutupi objek/tangan'}
+- Teks: "${part.watchOverlayText || ''}"
+- CATATAN MUTLAK: Video generator HANYA boleh merender anotasi berdasarkan parameter di atas. DILARANG merender elemen acak/noise!`;
+
+                const partText = `${baseDirectives}
+${finalDynamicDirectives}
+
+==================================
+[PART ${part.partNum} / ${totalParts} - DURASI: ${timeRange}]
+STEP: ${part.stepName}
+TARGET RESEP: ${targetDish}
+
+VOICE OVER (${genderTag} - ${voiceStyle || 'KASUAL'}):
+- Transisi: "${part.transitionPhrase || 'Yuk lanjut'}"
+- Script Narasi (Padat 00:00.5 - 00:09.5): "${part.actionVoice}"
+- Delivery Direction: ${part.vocalDeliveryDirective || 'Intonasi natural, menurun di akhir.'}
+
+LIGHTING & SENSOR: Soft diffused window daylight, indirect sunlight, 6500K crisp color temperature, soft wrapping shadow. Native 60fps, Shutter 90-degree crisp.
+
+ASMR FOLEY AUDIO:
+- Audio Foley: ${part.asmrFoleyDirective || 'Suara natural dapur (memasak/memotong/menggoreng)'}
+- Sync Marker: ${part.audioVisualSyncMarker || 'Sinkronisasi natural dengan aksi'}
+
+TEXT OVERLAY VISUAL (${overlayStyle || 'Editorial'}):
+${overlayDrt}
+
+CAMERA & SPATIAL ANCHOR:
+- Angle: ${part.cameraAnglePerspective || 'Top-Down 90 derajat'}
+- Lighting Dir: ${part.lightingDirection || 'Natural daylight dari jendela'}
+- Focus Dynamics: ${part.dofRackFocus || 'Fokus tajam terkunci'}
+- Props In-Frame: ${part.activePropsList || 'Talenan & Bahan Utama'}
+- Anti-Morphing Link: ${part.previousSceneContinuityAnchor || 'Kondisi 100% konsisten dengan part sebelumnya'}
+
+MATERIALITY & THERMAL LOCK:
+- Micro-Texture: 8K Ultra-HD Sharpness, ${part.macroTextureHighlight || 'Tekstur organik HD'}
+- Tekstur Fisik: ${part.textureMaterialityLock || 'Natural organik'}
+- Fluida/Suhu: ${part.thermalFluidState || 'Suhu ruang statis'}
+- Negative Constraints: ${part.sceneNegativeConstraints || 'Zero Glitch, Zero Clipping, Anti-Gravity'}
+
+KINETIC DYNAMICS: ${part.kineticPacing || 'Normal 1.0x'}. ${part.kineticDirective || 'Standard Motion'}
+
+HANDS CHOREOGRAPHY (STRICT 2 HANDS ONLY):
+- TANGAN KIRI: ${part.leftHandAction || 'Berada di luar frame / Menahan wadah'}
+- TANGAN KANAN: ${part.rightHandAction || 'Melakukan aksi utama'}
+
+SCENE PROMPT KESELURUHAN (MASTER SCENE):
+${part.scenePrompt}
+- TARGET FINAL STATE (DETIK 9-10 WAJIB TUNTAS): ${part.endOfSceneVisualState || 'Tugas mekanis telah tuntas dengan sempurna.'}${microCutsText}`;
+
+                const accordionItem = document.createElement('div');
+                accordionItem.className = 'bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs transition-all duration-200 hover:border-rose-300 mb-3';
+                accordionItem.innerHTML = `
+                    <div class="flex items-center justify-between p-4 sm:p-5 cursor-pointer bg-slate-50/70 hover:bg-rose-50/40 transition-colors" onclick="toggleAccordion('partAccordion${part.partNum}', this)">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">P${part.partNum}</span>
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap mb-1">
+                                    <h4 class="text-sm font-bold text-slate-900">${part.title}</h4>
+                                    <span class="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full border border-rose-200">10.0 Detik</span>
+                                    <span class="text-[10px] bg-fuchsia-100 text-fuchsia-800 font-bold px-2 py-0.5 rounded-full border border-fuchsia-200">Transisi Friendly</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-mono">${timeRange} • ${part.stepName}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-mono text-slate-400 hidden sm:inline">${partText.length} char</span>
+                            <button type="button" onclick="event.stopPropagation(); copyToClipboard('partTextarea${part.partNum}', this)" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-rose-50 text-rose-700 rounded-xl text-xs font-semibold shadow-2xs transition-all flex items-center gap-1.5 active:scale-95">
+                                <i class="fa-solid fa-copy"></i>
+                                <span class="hidden md:inline">Salin Part ${part.partNum}</span>
+                            </button>
+                            <i class="fa-solid fa-chevron-down text-slate-400 text-xs chevron-icon transition-transform"></i>
+                        </div>
+                    </div>
+
+                    <div id="partAccordion${part.partNum}" class="accordion-content border-t border-slate-100 p-0">
+                        <div class="p-4 sm:p-5 bg-white space-y-4">
+                            <textarea id="partTextarea${part.partNum}" class="w-full bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-xs sm:text-[13px] leading-relaxed h-64 border border-slate-800 outline-none resize-y selection:bg-rose-500 selection:text-white focus:border-rose-500/70">${partText}</textarea>
+                            
+							<!-- 1. LACI START-FRAME & END-FRAME (Biru/Indigo) -->
+                            <details class="prompt-accordion w-full mt-3 border-indigo-200">
+                                <summary class="accordion-trigger text-left rounded-xl bg-indigo-50 text-indigo-800 hover:bg-indigo-100">
+                                    <span class="flex items-center gap-2"><i class="fa-solid fa-anchor"></i> Tambah Prompt (Start & End Frame)</span>
+                                </summary>
+                                <div class="accordion-body bg-white p-3">
+                                    <!-- Penambahan items-center dan text-center -->
+                                    <div class="flex flex-col items-center justify-center text-center bg-indigo-50/50 border border-indigo-100 p-3.5 rounded-xl shadow-xs w-full gap-3">
+                                        <div class="flex flex-col items-center justify-center gap-1">
+                                            <div class="flex items-center justify-center gap-1.5">
+                                                <i class="fa-solid fa-anchor text-indigo-600"></i>
+                                                <span class="font-bold text-slate-800 text-xs">Kunci Frame ke Gambar Asli</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-500">Paksa AI melakukan Pixel-Perfect Match dengan gambar referensi di awal atau akhir scene.</p>
+                                        </div>
+                                        <!-- Tombol diset auto agar tidak melebar dan tetap di tengah -->
+                                        <div class="flex flex-col sm:flex-row items-center justify-center gap-2 w-full">
+                                            <button type="button" id="btnInjectMandate${part.partNum}" onclick="injectStartFrameMandate(${part.partNum})" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 active:scale-95 w-full sm:w-auto">
+                                                <i class="fa-solid fa-syringe"></i> Suntik Start-Frame (Gbr 1)
+                                            </button>
+                                            <button type="button" id="btnInjectEndMandate${part.partNum}" onclick="injectEndFrameMandate(${part.partNum})" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 active:scale-95 w-full sm:w-auto">
+                                                <i class="fa-solid fa-flag-checkered"></i> Suntik End-Frame (Gbr 2)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- 2. LACI ADVANCED INJECTORS (Putih Sederhana) -->
+                            <details class="prompt-accordion w-full mt-3">
+                                <summary class="accordion-trigger text-left rounded-xl">
+                                    <span class="flex items-center gap-2">⚙️ Advanced Injectors</span>
+                                </summary>
+                                <div class="accordion-body bg-white p-3">
+                                    
+                                    <!-- Kotak Injector 1 (Daging/Bahan Utama) -->
+                                    <div class="flex flex-col items-center justify-center text-center gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50/80 hover:border-slate-200 transition-colors w-full">
+                                        <button type="button" class="btn-inject w-max" onclick="injectVisualAnchor(${part.partNum})">
+                                            🥩 Inject Anchor Bahan Utama
+                                        </button>
+                                        <p class="text-[10px] text-slate-500 leading-relaxed">
+                                            Kunci wujud fisik, serat, dan warna bahan utama (seperti daging) agar <strong class="text-slate-700">100% konsisten</strong> dengan gambar referensi.
+                                        </p>
+                                    </div>
+									<!-- Kotak Injector 2: Keselarasan Hidangan Part 1 & Akhir -->
+<div class="flex flex-col items-center justify-center text-center gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50/80 hover:border-slate-200 transition-colors w-full">
+    <button type="button" class="btn-inject w-max" onclick="injectDishConsistencyAnchor(${part.partNum})">
+        🍽️ Inject Anchor Keselarasan Hidangan
+    </button>
+    <p class="text-[10px] text-slate-500 leading-relaxed">
+        Paksa AI menyamakan tampilan fisik hidangan/hasil masakan di part ini agar <strong class="text-slate-700">100% identik</strong> dengan Hook (Part 1) dan gambar referensi.
+    </p>
+</div>
+                                </div>
+                            </details>
+
+                            <!-- 3. LACI KLUSTER REVISI (Merah Muda/Rose) -->
+                            <details class="prompt-accordion w-full mt-3 border-rose-200">
+                                <summary class="accordion-trigger text-left rounded-xl bg-rose-50 text-rose-800 hover:bg-rose-100">
+                                    <span class="flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Kluster Revisi Manual (Chat AI)</span>
+                                </summary>
+                                <div class="accordion-body bg-white p-3 flex-col gap-2">
+                                    <div class="w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        <button type="button" onclick="document.getElementById('partImageInput${part.partNum}').click()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg shadow-xs transition-colors flex items-center justify-center border border-slate-200 active:scale-95 shrink-0" title="Lampirkan Gambar Referensi">
+                                            <i class="fa-solid fa-camera"></i>
+                                        </button>
+                                        <input type="file" id="partImageInput${part.partNum}" accept="image/jpeg,image/png,image/webp" onchange="handlePartImageUpload(event, ${part.partNum})" class="hidden">
+                                        <div class="relative flex-1">
+                                            <i class="fa-solid fa-pen-nib absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                            <input type="text" id="partRevisionInput${part.partNum}" placeholder="Contoh: Ubah aksi tangan kanan jadi menabur garam..." class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-200 outline-none shadow-xs">
+                                        </div>
+                                        <button type="button" id="btnRevisePart${part.partNum}" onclick="revisePartPrompt(${part.partNum})" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95 shrink-0">
+                                            <i class="fa-solid fa-arrows-rotate"></i>
+                                            <span>Revisi Part ${part.partNum}</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="partImagePreviewContainer${part.partNum}" class="hidden items-center gap-2 mt-2 bg-rose-50/80 p-1.5 rounded-lg border border-rose-200 w-max max-w-full overflow-hidden transition-all">
+                                        <i class="fa-solid fa-circle-notch fa-spin text-rose-500 text-xs hidden" id="partImageLoading${part.partNum}"></i>
+                                        <img id="partImagePreviewImg${part.partNum}" src="" class="w-8 h-8 object-cover rounded border border-rose-100 shadow-2xs">
+                                        <span id="partImagePreviewName${part.partNum}" class="text-[10px] text-slate-700 truncate max-w-[120px] font-medium"></span>
+                                        <button type="button" onclick="removePartImage(${part.partNum})" class="text-rose-500 hover:text-rose-700 ml-1 p-1 bg-white rounded-md border border-rose-100 shadow-2xs active:scale-95"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                    
+                                    <div id="partChatContainer${part.partNum}" class="hidden bg-white/90 border border-rose-200 rounded-xl p-3 mt-2 space-y-2 shadow-inner w-full">
+                                        <div class="flex items-center justify-between text-[11px] text-rose-800 border-b border-rose-100 pb-1 font-semibold">
+                                            <span class="flex items-center gap-1"><i class="fa-solid fa-comments text-rose-600"></i> Dialog Revisi Gemini (Part ${part.partNum})</span>
+                                            <button type="button" onclick="clearClusterChat(${part.partNum})" class="text-slate-400 hover:text-slate-700 text-[10px] transition-colors"><i class="fa-solid fa-trash mr-1"></i>Bersihkan Chat</button>
+                                        </div>
+                                        <div id="partChatLog${part.partNum}" class="space-y-2 max-h-44 overflow-y-auto pr-1 custom-scrollbar"></div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- 4. LACI GENERATE ULANG (Oren/Amber) -->
+                            <details class="prompt-accordion w-full mt-3 border-amber-200 mb-2">
+                                <summary class="accordion-trigger text-left rounded-xl bg-amber-50 text-amber-800 hover:bg-amber-100">
+                                    <span class="flex items-center gap-2"><i class="fa-solid fa-rotate-right"></i> Generate Ulang Otomatis</span>
+                                </summary>
+                                <div class="accordion-body bg-white p-3">
+                                    <div class="w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        <select id="partRegenerateOption${part.partNum}" class="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 outline-none focus:border-amber-500 shadow-xs">
+                                            <option value="scene">a. Generate ulang prompt scene dengan variasi lain.</option>
+                                            <option value="microcut">b. Generate ulang prompt micro cut dengan variasi lain.</option>
+                                            <option value="scene_microcut">c. Generate ulang prompt scene & micro cut.</option>
+                                            <option value="vo">d. Generate ulang narasi voice over.</option>
+                                            <option value="overlay">e. Generate ulang prompt TEXT OVERLAY VISUAL.</option>
+                                            <option value="full">f. Generate ulang seluruh prompt pada part ini (FULL).</option>
+                                        </select>
+                                        <button type="button" id="btnRegenPart${part.partNum}" onclick="regenerateSpecificPart(${part.partNum})" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95 shrink-0">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                            <span>Eksekusi Ulang</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                `;
+                partsContainer.appendChild(accordionItem);
+            });
+            
+            const summaryTitle = document.getElementById('resultSummaryTitle');
+            if (summaryTitle) summaryTitle.textContent = `Hasil Generator Video Pure UGC ${totalParts * 10} Detik:`;
+        }
+// 1. MESIN UNTUK MENYIMPAN (EXPORT)
+        function exportToJsonFile() {
+            // Mengambil data rahasia terakhir yang disimpan aplikasi saat Anda selesai generate
+            const rawData = localStorage.getItem('ugc_last_result');
+            if (!rawData) {
+                showToast("Belum ada data prompt! Generate dulu baru bisa di-export.", true);
+                return;
+            }
+
+            const dishName = document.getElementById('inputDishName')?.value || "naskah_ugc";
+            const blob = new Blob([rawData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            // Perintah otomatis mendownload file ke komputer Anda
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${dishName.replace(/\s+/g, '_').toUpperCase()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showToast("Berhasil! File JSON tersimpan di komputer.");
+        }
+
+        // 2. MESIN UNTUK MEMBUKA KEMBALI (LOAD/IMPORT)
+        function importFromJsonFile(event) {
+            const file = event.target.files ? event.target.files[0] : null;
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const jsonContent = e.target.result;
+                    const parsedData = JSON.parse(jsonContent);
+
+                    // Pengecekan apakah file yang dimasukkan benar
+                    if (!parsedData.parts || !parsedData.dishName) {
+                        throw new Error("Format file salah. Ini bukan file Blueprint yang valid.");
+                    }
+
+                    // Memasukkan kembali data ke memori aplikasi
+                    localStorage.setItem('ugc_last_result', jsonContent);
+
+                    // Memunculkan nama masakan ke kolom input
+                    const dishInput = document.getElementById('inputDishName');
+                    if (dishInput) dishInput.value = parsedData.dishName;
+
+                    // Membangun ulang tampilan kartu prompt di layar secara otomatis
+                    const envSelected = document.getElementById('environmentSelect')?.value || "Indoor";
+                    const overlayStyle = document.getElementById('overlayStyleSelect')?.value || "Doodle Text";
+                    const voiceStyle = document.getElementById('voiceStyleSelect')?.value || "Casual";
+                    const handProfile = { name: "Talent Standar" };
+
+                    renderPromptDataToUI(parsedData, parsedData.dishName, envSelected, overlayStyle, voiceStyle, handProfile);
+
+                    showToast(`Keren! Naskah untuk "${parsedData.dishName}" berhasil dimuat ulang.`);
+                } catch (err) {
+                    showToast(`Gagal membaca file: ${err.message}`, true);
+                } finally {
+                    event.target.value = ''; // Reset pilihan file
+                }
+            };
+            reader.readAsText(file);
+        }
+        function exportToTxt() {
+            const dishName = document.getElementById('inputDishName')?.value || "Naskah_UGC";
+            const textareas = document.querySelectorAll('#partsContainer textarea');
+            if (textareas.length === 0) { showToast("Tidak ada naskah untuk diekspor.", true); return; }
+
+            let out = `=== NASKAH STUDIO UGC 8K (FULL PHYSICS DIRECTIVES) : ${dishName.toUpperCase()} ===\n\n`;
+            textareas.forEach(ta => { out += ta.value + "\n\n==================================================\n\n"; });
+
+            const blob = new Blob([out], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `Prompt_UGC_${dishName.replace(/\s+/g, '_')}.txt`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            showToast("Naskah TXT beserta seluruh doktrin berhasil diunduh!");
+        }
+
+        function toggleAccordion(id, headerEl) {
+            const content = document.getElementById(id);
+            const chevron = headerEl?.querySelector('.chevron-icon');
+            if (!content) return;
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                if (chevron) chevron.classList.remove('rotate-180');
+            } else {
+                content.classList.add('expanded');
+                if (chevron) chevron.classList.add('rotate-180');
+            }
+        }
+
+        function expandAllCards() {
+            document.querySelectorAll('#partsContainer .accordion-content').forEach(el => el.classList.add('expanded'));
+            document.querySelectorAll('#partsContainer .chevron-icon').forEach(icon => icon.classList.add('rotate-180'));
+        }
+
+        function collapseAllCards() {
+            document.querySelectorAll('#partsContainer .accordion-content').forEach(el => el.classList.remove('expanded'));
+            document.querySelectorAll('#partsContainer .chevron-icon').forEach(icon => icon.classList.remove('rotate-180'));
+        }
+
+        function copyToClipboard(textareaId, btnElement) {
+            const textarea = document.getElementById(textareaId);
+            if (!textarea) return;
+
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                if (btnElement) {
+                    btnElement.classList.remove('bg-white', 'border-slate-200', 'hover:bg-rose-50', 'text-rose-700');
+                    btnElement.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-700', 'hover:bg-emerald-100');
+                    btnElement.innerHTML = '<i class="fa-solid fa-check-double"></i><span class="hidden md:inline font-bold">Tersalin!</span>';
+                }
+                showToast("Teks prompt berhasil disalin ke clipboard!");
+            } catch (err) {
+                showToast("Gagal menyalin teks.", true);
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toastNotification');
+            const msgEl = document.getElementById('toastMessage');
+            const iconEl = document.getElementById('toastIcon');
+            if (!toast || !msgEl || !iconEl) return;
+            msgEl.textContent = msg;
+            iconEl.className = isError ? 'fa-solid fa-circle-exclamation text-rose-400 text-sm' : 'fa-solid fa-circle-check text-emerald-400 text-sm';
+            toast.classList.remove('hidden');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => { toast.classList.add('hidden'); }, 3500);
+        }
+
+        function escapeHtml(string) {
+            const entityMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' };
+            return String(string).replace(/[&<>"'/]/g, s => entityMap[s]);
+        }
+
+        function handlePartImageUpload(e, partNum) {
+            const file = e.target.files ? e.target.files[0] : null;
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                showToast("Format file tidak didukung.", true);
+                return;
+            }
+
+            const previewContainer = document.getElementById(`partImagePreviewContainer${partNum}`);
+            const loadingIcon = document.getElementById(`partImageLoading${partNum}`);
+            const previewImg = document.getElementById(`partImagePreviewImg${partNum}`);
+            const previewName = document.getElementById(`partImagePreviewName${partNum}`);
+            
+            if (previewContainer) {
+                previewContainer.classList.remove('hidden');
+                previewContainer.classList.add('flex');
+                if (loadingIcon) loadingIcon.classList.remove('hidden');
+                if (previewImg) previewImg.classList.add('hidden');
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_DIMENSION = 800; 
+                    if (width > height && width > MAX_DIMENSION) {
+                        height = Math.round((height * MAX_DIMENSION) / width);
+                        width = MAX_DIMENSION;
+                    } else if (height > MAX_DIMENSION) {
+                        width = Math.round((width * MAX_DIMENSION) / height);
+                        height = MAX_DIMENSION;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const base64Url = canvas.toDataURL('image/jpeg', 0.85);
+                    const base64Data = base64Url.split(',')[1];
+                    
+                    partTempImages[partNum] = { base64: base64Data, mimeType: 'image/jpeg', name: file.name };
+
+                    if (previewImg && previewName && loadingIcon) {
+                        previewImg.src = base64Url;
+                        previewName.textContent = file.name;
+                        loadingIcon.classList.add('hidden');
+                        previewImg.classList.remove('hidden');
+                    }
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePartImage(partNum) {
+            delete partTempImages[partNum];
+            const input = document.getElementById(`partImageInput${partNum}`);
+            if (input) input.value = '';
+            const previewContainer = document.getElementById(`partImagePreviewContainer${partNum}`);
+            if (previewContainer) {
+                previewContainer.classList.add('hidden');
+                previewContainer.classList.remove('flex');
+            }
+        }
+
+        function buildGeminiContents(clusterId, currentPrompt) {
+            const history = clusterChatHistories[clusterId] || [];
+            const contents = [];
+            contents.push({
+                role: 'user',
+                parts: [{ text: `Konteks Prompt Saat Ini:\n"""\n${currentPrompt}\n"""\n\nRiwayat revisi sebelumnya dan instruksi baru akan mengikuti di bawah.` }]
+            });
+            contents.push({
+                role: 'model',
+                parts: [{ text: `Saya telah memahami konteks prompt saat ini dan siap membantu Anda merevisi adegan tersebut secara presisi.` }]
+            });
+            history.forEach(turn => {
+                const parts = [{ text: turn.text }];
+                if (turn.imageData) {
+                    parts.push({ inlineData: { mimeType: turn.imageData.mimeType, data: turn.imageData.base64 } });
+                }
+                contents.push({ role: turn.role, parts: parts });
+            });
+            return contents;
+        }
+
+        function appendChatMessage(clusterId, role, text, imageData = null, saveToHistory = true) {
+            if (!clusterChatHistories[clusterId]) clusterChatHistories[clusterId] = [];
+            
+            if (saveToHistory) {
+                const turnData = { role, text };
+                if (imageData) turnData.imageData = imageData;
+                clusterChatHistories[clusterId].push(turnData);
+            }
+            
+            const containerId = `partChatContainer${clusterId}`;
+            const logId = `partChatLog${clusterId}`;
+            const container = document.getElementById(containerId);
+            const log = document.getElementById(logId);
+            if (!container || !log) return;
+            
+            container.classList.remove('hidden');
+            const msgDiv = document.createElement('div');
+            
+            if (role === 'user') {
+                let imgHtml = '';
+                if (imageData) {
+                    imgHtml = `<img src="data:${imageData.mimeType};base64,${imageData.base64}" class="w-full max-w-[120px] rounded-lg border border-rose-200 mt-2 mb-1 shadow-sm object-cover">`;
+                }
+                msgDiv.className = 'bg-rose-50 border border-rose-200 text-slate-800 p-2.5 rounded-xl text-xs flex items-start gap-2 shadow-2xs mt-2';
+                msgDiv.innerHTML = `<i class="fa-solid fa-user text-rose-600 mt-0.5 text-[11px]"></i><div class="flex-1 min-w-0"><strong class="block text-[10px] text-rose-800 font-bold uppercase">Instruksi Anda</strong><p class="leading-relaxed mt-0.5 break-words">${escapeHtml(text)}</p>${imgHtml}</div>`;
+            } else {
+                msgDiv.className = 'bg-slate-50 border border-slate-200 text-slate-700 p-2.5 rounded-xl text-xs flex items-start gap-2 shadow-2xs mt-2';
+                msgDiv.innerHTML = `<i class="fa-solid fa-robot text-sky-600 mt-0.5 text-[11px]"></i><div class="flex-1 min-w-0"><strong class="block text-[10px] text-sky-800 font-bold uppercase">Gemini AI Director</strong><p class="leading-relaxed font-sans mt-0.5 break-words">${escapeHtml(text)}</p></div>`;
+            }
+            log.appendChild(msgDiv);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearClusterChat(clusterId) {
+            clusterChatHistories[clusterId] = [];
+            const containerId = `partChatContainer${clusterId}`;
+            const logId = `partChatLog${clusterId}`;
+            const container = document.getElementById(containerId);
+            const log = document.getElementById(logId);
+            if (log) log.innerHTML = '';
+            if (container) container.classList.add('hidden');
+            showToast("Riwayat chat kluster dibersihkan.");
+        }
+
+        async function revisePartPrompt(partNum) {
+            const apiKey = getActiveApiKey();
+            if (!apiKey) {
+                showToast("Gemini API Key belum diisi! Hubungkan terlebih dahulu.", true);
+                toggleGeminiKeyModal();
+                return;
+            }
+
+            const inputEl = document.getElementById(`partRevisionInput${partNum}`);
+            const userInstruction = inputEl.value.trim();
+            const imgData = partTempImages[partNum] || null;
+
+            if (!userInstruction && !imgData) {
+                showToast(`Ketikkan instruksi revisi atau lampirkan gambar untuk Part ${partNum}.`, true);
+                return;
+            }
+
+            const btn = document.getElementById(`btnRevisePart${partNum}`);
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>Memproses...</span>';
+            btn.disabled = true;
+
+            const currentPartText = document.getElementById(`partTextarea${partNum}`).value;
+            const historyLengthBefore = clusterChatHistories[partNum] ? clusterChatHistories[partNum].length : 0;
+            
+            appendChatMessage(partNum, 'user', userInstruction || "Tolong sesuaikan scene ini berdasarkan gambar referensi yang saya lampirkan.", imgData);
+            inputEl.value = '';
+            removePartImage(partNum);
+
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const systemPrompt = `Anda adalah Gemini AI Video Director & Prompt Engineer untuk adegan UGC Food 8K.
+Tugas Anda:
+1. Memahami secara mendalam instruksi perbaikan dari pengguna layaknya percakapan interaktif.
+2. Memberikan respons chat ramah berbahasa Indonesia (chatResponse) yang menjelaskan pemahaman Anda tentang aksi yang diminta dan detail apa yang disesuaikan.
+3. Menghasilkan teks prompt Part yang baru secara lengkap (revisedPrompt).
+
+ATURAN MUTLAK: Prompt Part WAJIB MEMPERTAHANKAN seluruh doktrin Injeksi Global 8K (seperti Strict 2 Hands Only, Zero-Mess, Fisika Logis, Foley ASMR, Kunci Fokus, Target Specular, Dinamika Termal, dan Goyangan Kamera) yang sudah ada di prompt lama, JANGAN MENGHAPUS ATAU MEMOTONG instruksi awal tersebut! Lakukan modifikasi/revisi HANYA pada bagian Voice Over, teks overlay, aksi mekanis tangan (kiri/kanan), atau alur adegan sesuai permintaan user. Jaga struktur tetap urut dan komprehensif dari detik 0.0s hingga 10.0s. DILARANG MERANGKUM PROMPT. JANGAN PERNAH ANTI DENGAN PROMPT YANG PANJANG.
+SANGAT PENTING (FORMATTING LOCK): Struktur tata letak teks, baris baru (enter), spasi, list, serta judul-judul blok kapital (seperti "VOICE OVER:", "LIGHTING & SENSOR:", "SCENE PROMPT KESELURUHAN", dll) WAJIB DIPERTAHANKAN 100% SAMA PERSIS SEPERTI TEKS ASLI.
+
+Keluarkan output HANYA dalam format JSON terstruktur persis:
+{
+  "chatResponse": "Respons percakapan Anda menjelaskan perubahan yang dilakukan secara singkat",
+  "revisedPrompt": "Teks prompt yang telah direvisi secara utuh dari awal sampai akhir"
+}`;
+
+                const chatContents = buildGeminiContents(partNum, currentPartText);
+
+                const payload = {
+                    contents: chatContents,
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                chatResponse: { type: "STRING" },
+                                revisedPrompt: { type: "STRING" }
+                            },
+                            required: ["chatResponse", "revisedPrompt"]
+                        }
+                    }
+                };
+
+                const response = await fetchWithRetry(apiUrl, payload, 3);
+                const data = await response.json();
+                
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || response.statusText);
+                }
+
+                let candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (candidateText) {
+                    candidateText = candidateText.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+                    const parsed = JSON.parse(candidateText);
+                    
+                    appendChatMessage(partNum, 'model', parsed.chatResponse);
+                    document.getElementById(`partTextarea${partNum}`).value = parsed.revisedPrompt;
+                    showToast(`Part ${partNum} berhasil direvisi oleh Gemini!`);
+                } else {
+                    throw new Error("Respons AI kosong.");
+                }
+            } catch (err) {
+                console.error(err);
+                if (clusterChatHistories[partNum] && clusterChatHistories[partNum].length > historyLengthBefore) {
+                    clusterChatHistories[partNum].pop();
+                }
+                appendChatMessage(partNum, 'model', `Sistem gagal memproses: ${err.message}. Jangan khawatir, silakan coba tekan tombol revisi sekali lagi.`, null, false);
+                showToast(`Gagal merevisi Part ${partNum}`, true);
+            } finally {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }
+        }
+
+        async function regenerateSpecificPart(partNum) {
+            const apiKey = getActiveApiKey();
+            if (!apiKey) {
+                showToast("Gemini API Key belum diisi! Hubungkan terlebih dahulu.", true);
+                toggleGeminiKeyModal();
+                return;
+            }
+
+            const selectEl = document.getElementById(`partRegenerateOption${partNum}`);
+            if (!selectEl) return;
+            
+            const optionValue = selectEl.value;
+            const optionText = selectEl.options[selectEl.selectedIndex].text;
+            
+            let promptInstruction = "";
+            switch(optionValue) {
+                case 'scene':
+                    promptInstruction = "Generate ulang prompt scene dengan variasi lain karena selalu terjadi anomali. Pertahankan teks bagian lainnya persis sama.";
+                    break;
+                case 'microcut':
+                    promptInstruction = "Generate ulang prompt micro cut dengan variasi lain karena selalu terjadi anomali. Pertahankan teks bagian lainnya persis sama.";
+                    break;
+                case 'scene_microcut':
+                    promptInstruction = "Generate ulang prompt scene dan micro cut dengan variasi lain karena selalu terjadi anomali. Pertahankan teks bagian lainnya persis sama.";
+                    break;
+                case 'vo':
+                    promptInstruction = "Generate ulang narasi voice over. Berikan variasi kalimat yang baru. Pertahankan teks bagian lainnya persis sama.";
+                    break;
+                case 'overlay':
+                    promptInstruction = "Generate ulang prompt TEXT OVERLAY VISUAL dengan variasi lain. Pertahankan teks bagian lainnya persis sama.";
+                    break;
+                case 'full':
+                    promptInstruction = "Generate ulang seluruh prompt pada part ini (FULL) dengan variasi ide baru.";
+                    break;
+            }
+
+            const btn = document.getElementById(`btnRegenPart${partNum}`);
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>Memproses...</span>';
+            btn.disabled = true;
+
+            const currentPartText = document.getElementById(`partTextarea${partNum}`).value;
+            const historyLengthBefore = clusterChatHistories[partNum] ? clusterChatHistories[partNum].length : 0;
+            
+            appendChatMessage(partNum, 'user', `[REGENERATE: ${optionText}]\nInstruksi sistem: ${promptInstruction}`);
+
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const systemPrompt = `Anda adalah Gemini AI Video Director & Prompt Engineer untuk adegan UGC Food 8K.
+Tugas Anda:
+1. Memahami instruksi regenerasi spesifik dari pengguna.
+2. Memberikan respons chat ramah berbahasa Indonesia (chatResponse).
+3. Menghasilkan teks prompt Part yang baru (revisedPrompt).
+
+ATURAN MUTLAK: Modifikasi HANYA bagian yang diminta oleh pengguna. Jika pengguna meminta mengubah bagian Scene, maka narasi VO, teks overlay, dan bagian lainnya harus dipertahankan SAMA PERSIS dengan teks sebelumnya. DILARANG KERAS merangkum kalimat jika panjang.
+SANGAT PENTING (FORMATTING LOCK): Struktur tata letak teks, baris baru (enter), spasi, list, serta judul-judul blok kapital (seperti "VOICE OVER:", "LIGHTING & SENSOR:", "SCENE PROMPT KESELURUHAN", dll) WAJIB DIPERTAHANKAN 100% SAMA PERSIS SEPERTI TEKS ASLI. 
+
+Keluarkan output HANYA dalam format JSON terstruktur persis:
+{
+  "chatResponse": "Respons percakapan Anda menjelaskan bagian mana yang diregenerate",
+  "revisedPrompt": "Teks prompt yang telah direvisi secara utuh dari awal sampai akhir"
+}`;
+
+                const chatContents = buildGeminiContents(partNum, currentPartText);
+
+                const payload = {
+                    contents: chatContents,
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                chatResponse: { type: "STRING" },
+                                revisedPrompt: { type: "STRING" }
+                            },
+                            required: ["chatResponse", "revisedPrompt"]
+                        }
+                    }
+                };
+
+                const response = await fetchWithRetry(apiUrl, payload, 3);
+                const data = await response.json();
+                
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || response.statusText);
+                }
+
+                let candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (candidateText) {
+                    candidateText = candidateText.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+                    const parsed = JSON.parse(candidateText);
+                    
+                    appendChatMessage(partNum, 'model', parsed.chatResponse);
+                    document.getElementById(`partTextarea${partNum}`).value = parsed.revisedPrompt;
+                    showToast(`Bagian pada Part ${partNum} berhasil di-generate ulang!`);
+                } else {
+                    throw new Error("Respons AI kosong.");
+                }
+            } catch (err) {
+                console.error(err);
+                if (clusterChatHistories[partNum] && clusterChatHistories[partNum].length > historyLengthBefore) {
+                    clusterChatHistories[partNum].pop();
+                }
+                appendChatMessage(partNum, 'model', `Sistem gagal memproses: ${err.message}.`, null, false);
+                showToast(`Gagal memproses regenerate Part ${partNum}`, true);
+            } finally {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col text-slate-900 bg-slate-50 antialiased">
+    
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 via-rose-500 to-amber-500 flex items-center justify-center text-white text-lg shadow-sm">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-900 flex items-center gap-2">
+                        <span>AI UGC Food Video Studio <strong class="text-rose-600">8K</strong></span>
+                    </h1>
+                    <p class="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-widest"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>60+ Physics Parameters</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button type="button" onclick="toggleGeminiKeyModal()" class="px-3 py-1.5 rounded-xl border border-slate-300 hover:border-slate-400 bg-white text-xs font-semibold text-slate-700 flex items-center gap-2 shadow-2xs transition-all hover:bg-slate-50">
+                    <span id="apiKeyStatusBadge" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <i class="fa-solid fa-key text-rose-500"></i>
+                    <span class="hidden sm:inline" id="apiKeyStatusText">API Key Belum Diisi</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full space-y-6">
+        <section class="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
+            
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-image text-rose-600"></i><span>Foto / Gambar Referensi</span>
+                    </label>
+                </div>
+                <div id="dropzoneEmpty" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleImageDrop(event)" onclick="document.getElementById('inputRefImage').click()" class="cursor-pointer border-2 border-dashed border-slate-300 hover:border-rose-400 bg-slate-50/70 hover:bg-rose-50/40 rounded-2xl p-5 text-center transition-all group relative overflow-hidden">
+                    <input type="file" id="inputRefImage" accept="image/jpeg,image/png,image/webp" multiple onchange="handleImageUpload(event)" class="hidden">
+                    <div class="flex flex-col items-center justify-center gap-2">
+                        <div class="w-11 h-11 rounded-xl bg-white text-slate-500 group-hover:text-rose-600 flex items-center justify-center text-lg border border-slate-200 shadow-2xs"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                        <div class="space-y-0.5">
+                            <p class="text-xs font-bold text-slate-700 group-hover:text-rose-700">Pilih atau Seret Gambar Masakan (Bisa Multiple)</p>
+                        </div>
+                    </div>
+                    <div id="dropzoneLoadingIndicator" class="hidden absolute inset-0 bg-slate-50/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 transition-all">
+                        <i class="fa-solid fa-circle-notch fa-spin text-rose-600 text-2xl mb-2"></i>
+                        <p class="text-[11px] font-bold text-rose-700 animate-pulse uppercase tracking-wider">Memproses Gambar...</p>
+                    </div>
+                </div>
+                <div id="dropzonePreview" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex flex-col gap-3">
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="inputDishName" class="block text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-bowl-food text-rose-600"></i><span>Nama Masakan / Objek Resep</span>
+                </label>
+                <input type="text" id="inputDishName" placeholder="Contoh: Es Campur Dingin, Dimsum Udang, Telur Gulung Crispy..." class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 font-medium focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none transition-all">
+            </div>
+
+            <!-- Fitur Co-Pilot Bumbu (Human-in-the-Loop) -->
+            <div class="bg-rose-50/60 border border-rose-200 rounded-2xl p-4 space-y-3 shadow-inner">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-rose-800 flex items-center gap-2">
+                        <i class="fa-solid fa-mortar-pestle"></i><span>Co-Pilot Bumbu & Bahan (Opsional)</span>
+                    </label>
+                    <span class="text-[10px] bg-rose-200 text-rose-800 font-bold px-2 py-0.5 rounded-full border border-rose-300">Preview AI</span>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="inputSpiceChat" placeholder="Contoh: Buatkan bumbu asli Padang, tambahkan rempah komplit..." class="flex-1 px-3 py-2 bg-white border border-rose-300 rounded-xl text-xs text-slate-800 focus:border-rose-500 focus:ring-1 focus:ring-rose-200 outline-none shadow-xs">
+                    <button type="button" id="btnPreviewSpice" onclick="generateSpicePreview()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 whitespace-nowrap active:scale-95">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Preview Bumbu
+                    </button>
+                </div>
+
+                <div class="relative">
+                    <textarea id="inputRecipeDetails" placeholder="Hasil preview bumbu dari Gemini akan muncul di sini. Anda bisa mengeditnya manual sebelum klik Generate Prompt di bawah..." class="w-full h-24 px-3 py-2 bg-white border border-rose-300 rounded-xl text-xs text-slate-800 focus:border-rose-500 focus:ring-1 focus:ring-rose-200 outline-none custom-scrollbar resize-y shadow-xs"></textarea>
+                    <button type="button" onclick="clearSpicePreview()" class="absolute top-2 right-2 w-6 h-6 bg-rose-100 hover:bg-rose-200 text-rose-600 rounded-md flex items-center justify-center text-[10px] shadow-sm transition-colors border border-rose-200" title="Bersihkan">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between"><label class="block text-[11px] font-bold text-slate-700 uppercase">Lingkungan Dapur</label><div class="inline-flex bg-slate-100 p-0.5 rounded text-[10px]"><button type="button" id="btnEnvIndoor" onclick="switchEnvironmentMode('indoor')" class="px-2 py-1 rounded bg-white text-rose-700 font-bold shadow-xs">In</button><button type="button" id="btnEnvOutdoor" onclick="switchEnvironmentMode('outdoor')" class="px-2 py-1 rounded text-slate-600">Out</button></div></div>
+                    <select id="environmentSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none"></select>
+                </div>
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between"><label class="block text-[11px] font-bold text-slate-700 uppercase">Gaya Suara VO</label><div class="inline-flex bg-slate-100 p-0.5 rounded text-[10px]"><button type="button" id="btnVoFemale" onclick="switchVoiceGender('female')" class="px-2 py-1 rounded bg-white text-rose-700 font-bold shadow-xs">Wan</button><button type="button" id="btnVoMale" onclick="switchVoiceGender('male')" class="px-2 py-1 rounded text-slate-600">Pria</button></div></div>
+                    <select id="voiceStyleSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none"></select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase">Tangan Talent</label>
+                    <select id="talentHandSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none"></select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase">Teks Overlay</label>
+                    <select id="overlayStyleSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none"></select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase">Alat Halus Bumbu</label>
+                    <select id="spiceToolSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none"></select>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex flex-col items-center justify-center gap-4 text-center">
+                <div class="flex items-center gap-2 text-[11px] text-slate-600 flex-wrap justify-center">
+                    <span class="font-bold uppercase tracking-wider text-slate-500">Pemicu Teks:</span>
+                    <select id="triggerModeSelect" onchange="handleTriggerModeChange()" class="px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs outline-none">
+                        <option value="context">Konteks Adegan</option><option value="timecode">Timecode Detik</option>
+                    </select>
+                    <select id="triggerValueSelect" class="px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs outline-none">
+                        <option value="Sedang">Sedang (Standar)</option><option value="Rendah">Rendah (Minimal)</option><option value="Tinggi">Tinggi (Kaya Anotasi)</option>
+                    </select>
+                </div>
+
+                <div class="w-full max-w-md">
+                    <button type="button" id="btnGenerate" onclick="handleGenerateClick()" class="w-full py-4 px-6 bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-700 hover:to-amber-600 text-white font-black tracking-wide text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2.5 active:scale-[0.99]">
+                        <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+                        <span>GENERATE PROMPT</span>
+                    </button>
+                    <div id="generationProgressText" class="hidden mt-3 text-xs text-slate-500 font-mono flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-circle-notch fa-spin text-rose-600"></i>
+                        <span id="generationStatusMsg">Mengeksekusi...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="outputSection" class="space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+                <div>
+                    <h3 id="resultSummaryTitle" class="text-base sm:text-lg font-black text-slate-900">Siap Menerima Blueprint</h3>
+                </div>
+                <div class="flex items-center gap-2">
+				<div class="flex items-center gap-2 flex-wrap">
+    <!-- Tombol untuk Menyimpan Data (Export) -->
+    <button type="button" onclick="exportToJsonFile()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition-all flex items-center gap-1.5">
+        <i class="fa-solid fa-file-arrow-down"></i> Export JSON
+    </button>
+    
+    <!-- Tombol untuk Membuka Kembali Data (Import/Load) -->
+    <button type="button" onclick="document.getElementById('importJsonInput').click()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition-all flex items-center gap-1.5">
+        <i class="fa-solid fa-file-arrow-up"></i> Import JSON
+    </button>
+    <input type="file" id="importJsonInput" accept=".json" onchange="importFromJsonFile(event)" class="hidden">
+
+    <!-- Tombol lama Anda (Export TXT & lainnya) tetap aman di sini -->
+    <button type="button" onclick="exportToTxt()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold shadow-2xs transition-all flex items-center gap-1.5">
+        <i class="fa-solid fa-download"></i> Export TXT
+    </button>
+</div>
+                    <button type="button" onclick="expandAllCards()" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-2xs transition-all">
+                        <i class="fa-solid fa-angles-down mr-1"></i> Buka
+                    </button>
+                    <button type="button" onclick="collapseAllCards()" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-2xs transition-all">
+                        <i class="fa-solid fa-angles-up mr-1"></i> Tutup
+                    </button>
+                </div>
+            </div>
+
+            <div id="partsContainer" class="space-y-3">
+                <!-- Data akan di-render di sini -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal API Key -->
+    <div id="geminiKeyModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-key text-rose-600"></i><span>Koneksi Gemini API Key</span></h3>
+                <button type="button" onclick="toggleGeminiKeyModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase">Gemini API Key Anda</label>
+                    <input type="password" id="customApiKeyInput" placeholder="Tempel kunci AIzaSy... di sini" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono outline-none focus:border-rose-500 focus:bg-white">
+                </div>
+				<!-- Dropdown Pilihan Model Gemini -->
+<div class="space-y-1.5 pt-2">
+    <label class="block text-[11px] font-bold text-slate-700 uppercase">Pilih Versi Mesin Gemini</label>
+    <select id="geminiModelSelect" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono outline-none focus:border-rose-500 focus:bg-white">
+        
+        <!-- KELOMPOK 1: MESIN GRATIS -->
+        <optgroup label="🟢 Lite (Kuota 15x)">
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+            <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B</option>
+        </optgroup>
+        
+        <!-- KELOMPOK 2: MESIN PREMIUM / BERBAYAR -->
+        <optgroup label="🟠 Premium (Kuota 2x)">
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+            <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+        </optgroup>
+        
+    </select>
+</div>
+                <div class="flex items-center justify-between pt-1">
+                    <button type="button" onclick="removeGeminiApiKey()" class="text-xs text-slate-500 hover:text-rose-600 underline">Hapus Kunci</button>
+                    <button type="button" onclick="saveGeminiApiKey()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs">Simpan Kunci</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toastNotification" class="hidden fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-800 flex items-center gap-3 text-xs max-w-sm transition-all">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+        <span id="toastMessage" class="flex-1 font-medium leading-snug">Operasi berhasil.</span>
+    </div>
+<script>
+    // Memblokir Klik Kanan
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // Memblokir Tombol F12, Ctrl+U (View Source), Ctrl+Shift+I (Inspect)
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123) { // F12
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { // Ctrl+Shift+I
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { // Ctrl+Shift+C
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { // Ctrl+Shift+J
+            return false;
+        }
+        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { // Ctrl+U
+            return false;
+        }
+    };
+</script>
+</body>
+</html>
